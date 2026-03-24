@@ -31,9 +31,9 @@ namespace WebApplication1.Controllers
         }
         [Authorize]
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult Get(int pageNumber, int pageQtd)
         {
-            var employess =  _employeeRepository.Get();
+            var employess =  _employeeRepository.Get(pageNumber, pageQtd);
 
             return Ok(employess);
         }

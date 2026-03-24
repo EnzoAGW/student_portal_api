@@ -1,21 +1,25 @@
-﻿using WebApplication1.Model;
+using WebApplication1.Model;
 
 namespace WebApplication1.infra
 {
     public class EmployeeRepository : IEmployeeRepository
     {
+        private readonly ConnectionContext _context;
 
-        private readonly ConnectionContext _context = new ConnectionContext();
+        public EmployeeRepository(ConnectionContext context)
+        {
+            _context = context;
+        }
+
         public void Add(Employee employee)
         {
             _context.Employees.Add(employee);
             _context.SaveChanges();
         }
 
-
-        public List<Employee> Get()
+        public List<Employee> Get(int pageNumber, int pageQtd)
         {
-            return _context.Employees.ToList();
+            return _context.Employees.Skip(pageNumber * pageQtd).Take(pageQtd).ToList();
         }
 
         public Employee? Get(int id)

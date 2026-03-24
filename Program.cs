@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.Filters;
@@ -13,7 +14,25 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddTransient<IEmployeeRepository, EmployeeRepository>();
+
+// AddDbContext registra o ConnectionContext no sistema de injeção de dependência.
+// AddScoped = "usa o mesmo contexto durante toda a requisição HTTP"
+// Isso é melhor que Transient para o DbContext.
+builder.Services.AddDbContext<ConnectionContext>(options =>
+    options.UseNpgsql(
+        "Server=localhost;Port=5432;Database=employee_sample;User Id=postgres;Password=1234;"));
+
+// Repositórios — o ASP.NET vai injetar o ConnectionContext automaticamente no construtor
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
+builder.Services.AddScoped<IGradeRepository, GradeRepository>();
+builder.Services.AddScoped<IStudentEnrollmentRepository, StudentEnrollmentRepository>();
+builder.Services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+builder.Services.AddScoped<IWorkShiftRepository, WorkShiftRepository>();
+builder.Services.AddScoped<IWorkScheduleRepository, WorkScheduleRepository>();
+builder.Services.AddScoped<ITimeRecordRepository, TimeRecordRepository>();
+builder.Services.AddScoped<ISubjectTeacherRepository, SubjectTeacherRepository>();
 
 builder.Services.AddSwaggerGen(options =>
 {

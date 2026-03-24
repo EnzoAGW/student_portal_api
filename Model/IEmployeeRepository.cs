@@ -3,7 +3,7 @@
     public interface IEmployeeRepository
     {
         void Add(Employee employee);
-        List<Employee> Get();
+        List<Employee> Get(int pageNumber, int pageQtd);
         Employee? Get(int id);
     }
 }
