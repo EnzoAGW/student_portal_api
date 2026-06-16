@@ -1,225 +1,121 @@
-# Portal Escolar — ASP.NET Core API
+# Portal Escolar
 
-API REST para gerenciamento de um portal escolar com dois módulos: **Portal do Aluno** e **Portal do Empregado**.
+Full-stack school management platform with two portals: **Student** (grades, attendance, enrollment) and **Employee** (time tracking, scheduling, shifts).
 
-## Tecnologias
+## Stack
 
-- .NET 10 / ASP.NET Core
-- Entity Framework Core + PostgreSQL (Npgsql)
-- JWT Bearer Authentication
-- Swagger / OpenAPI
-- xUnit + Moq (testes)
+| Layer | Technology |
+|---|---|
+| Frontend | React 19 · TypeScript · Vite · Tailwind CSS 4 |
+| State | Zustand · TanStack React Query |
+| Backend | ASP.NET Core 10 · C# |
+| Database | PostgreSQL 17 |
+| Auth | JWT Bearer |
+| Tests | xUnit · Moq · EF Core InMemory |
 
----
+## Features
 
-## Como rodar
+**Student Portal**
+- View enrolled subjects by semester
+- Check grades per subject and evaluation type
+- Track attendance with presence percentage
 
-### Pré-requisitos
+**Employee Portal**
+- Time recording — clock in/out with lunch break calculation
+- Work schedule — view assigned shifts by date
+- Shift management — morning, afternoon, night definitions
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- PostgreSQL rodando em `localhost:5432`
+## Project Structure
 
-### 1. Banco de dados
-
-Crie o banco e aplique as migrations:
-
-```bash
-dotnet ef migrations add InitialCreate
-dotnet ef database update
+```
+WebApplication1/
+├── back/          # ASP.NET Core API
+│   ├── Controllers/
+│   ├── Model/         # Entities + repository interfaces
+│   ├── infra/         # EF Core repositories + DbContext
+│   ├── ViewModel/     # Request DTOs
+│   └── Services/      # JWT token generation
+├── front/         # React + TypeScript (Vite)
+│   └── src/
+│       ├── features/  # student/ and employee/ feature modules
+│       ├── components/
+│       ├── store/     # Zustand auth + portal state
+│       └── lib/       # Axios instance + React Query config
+└── WebApplication1.Tests/  # xUnit test suite
 ```
 
-A string de conexão está em `infra/ConnectionContext.cs`. Ajuste usuário/senha se necessário.
+## Running locally
 
-### 2. Rodar a API
+**Prerequisites:** .NET 10 SDK · Node 20+ · PostgreSQL running on `localhost:5432`
+
+**1. Database**
+
+Create a database named `employee_sample` in PostgreSQL. The application uses EF Core and expects the schema to exist — run migrations or let the context auto-create on first run.
+
+```
+Host:     localhost:5432
+Database: employee_sample
+User:     postgres
+Password: 1234
+```
+
+**2. Backend**
 
 ```bash
+cd back
 dotnet run
+# API available at http://localhost:5266
+# Swagger at http://localhost:5266/swagger
 ```
 
-Acesse o Swagger em: `https://localhost:{porta}/swagger`
-
-### 3. Rodar os testes
+**3. Frontend**
 
 ```bash
-cd ../WebApplication1.Tests
+cd front
+npm install
+npm run dev
+# App available at http://localhost:3000
+```
+
+## Authentication
+
+The API uses JWT Bearer tokens. Credentials for local testing:
+
+| Username | Password | Role | Access |
+|---|---|---|---|
+| admin | 123 | admin | Full |
+| rh | rh123 | rh | Employee portal |
+| secretaria | sec123 | secretaria | Student portal |
+| professor | prof123 | professor | Full |
+
+Login endpoint:
+```
+POST /api/v1/auth?username={user}&password={password}
+```
+
+## API overview
+
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| POST | `/api/v1/auth` | No | Get JWT token |
+| GET | `/api/v1/student` | Yes | List students |
+| GET | `/api/v1/grade/student/{id}` | Yes | Grades by student |
+| GET | `/api/v1/attendance/student/{id}` | Yes | Attendance by student |
+| GET | `/api/v1/timerecord/employee/{id}` | Yes | Time records |
+| GET | `/api/v1/workschedule/employee/{id}` | Yes | Work schedule |
+
+Full endpoint reference in [`back/README.md`](back/README.md).
+
+## Tests
+
+28 tests across models, repositories, and controllers.
+
+```bash
+cd WebApplication1.Tests
 dotnet test
 ```
 
----
-
-## Autenticação
-
-Todos os endpoints exigem um token JWT. Obtenha-o via:
-
-```
-POST /api/v1/auth?username={usuario}&password={senha}
-```
-
-| Usuário      | Senha    | Papel        |
-|--------------|----------|--------------|
-| `admin`      | `123`    | admin        |
-| `rh`         | `rh123`  | rh           |
-| `secretaria` | `sec123` | secretaria   |
-| `professor`  | `prof123`| professor    |
-
-Use o token no header: `Authorization: Bearer {token}`
-
----
-
-## Módulos e Endpoints
-
-### Autenticação
-
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| POST | `/api/v1/auth` | Gera token JWT |
-
----
-
-### Portal do Aluno
-
-#### Alunos
-
-| Método | Rota | Papel | Descrição |
-|--------|------|-------|-----------|
-| POST | `/api/v1/student` | qualquer | Cadastrar aluno (com foto opcional) |
-| GET | `/api/v1/student?pageNumber=0&pageQtd=10` | qualquer | Listar alunos paginado |
-| GET | `/api/v1/student/{id}` | qualquer | Buscar aluno por ID |
-| POST | `/api/v1/student/{id}/download` | qualquer | Download da foto do aluno |
-
-#### Matérias
-
-| Método | Rota | Papel | Descrição |
-|--------|------|-------|-----------|
-| POST | `/api/v1/subject` | secretaria, admin | Criar matéria |
-| GET | `/api/v1/subject` | qualquer | Listar matérias |
-| GET | `/api/v1/subject/{id}` | qualquer | Buscar matéria por ID |
-
-#### Matrícula em Matéria
-
-| Método | Rota | Papel | Descrição |
-|--------|------|-------|-----------|
-| POST | `/api/v1/enrollment` | secretaria, admin | Matricular aluno em matéria |
-| GET | `/api/v1/enrollment/student/{id}` | qualquer | Matérias de um aluno |
-| GET | `/api/v1/enrollment/subject/{id}` | qualquer | Alunos de uma matéria |
-
-#### Notas
-
-| Método | Rota | Papel | Descrição |
-|--------|------|-------|-----------|
-| POST | `/api/v1/grade` | professor, admin | Lançar nota |
-| GET | `/api/v1/grade/student/{id}` | qualquer | Notas de um aluno |
-| GET | `/api/v1/grade/student/{studentId}/subject/{subjectId}/average` | qualquer | Média do aluno na matéria |
-
-#### Frequência
-
-| Método | Rota | Papel | Descrição |
-|--------|------|-------|-----------|
-| POST | `/api/v1/attendance` | professor, admin | Registrar chamada (presente/falta) |
-| GET | `/api/v1/attendance/student/{studentId}/subject/{subjectId}` | qualquer | Histórico de chamadas |
-| GET | `/api/v1/attendance/student/{studentId}/subject/{subjectId}/percentage` | qualquer | % de presença (aprovado/reprovado) |
-
----
-
-### Portal do Empregado
-
-#### Funcionários
-
-| Método | Rota | Papel | Descrição |
-|--------|------|-------|-----------|
-| POST | `/api/v1/employee` | qualquer | Cadastrar funcionário |
-| GET | `/api/v1/employee?pageNumber=0&pageQtd=10` | qualquer | Listar funcionários |
-| POST | `/api/v1/employee/{id}/download` | qualquer | Download da foto |
-
-#### Professor → Matéria
-
-| Método | Rota | Papel | Descrição |
-|--------|------|-------|-----------|
-| POST | `/api/v1/subject-teacher` | rh, admin | Atribuir professor a matéria |
-| GET | `/api/v1/subject-teacher/employee/{id}` | qualquer | Matérias de um professor |
-| GET | `/api/v1/subject-teacher/subject/{id}` | qualquer | Professores de uma matéria |
-
-#### Turnos
-
-| Método | Rota | Papel | Descrição |
-|--------|------|-------|-----------|
-| POST | `/api/v1/workshift` | rh, admin | Criar turno (Manhã, Tarde, Noite...) |
-| GET | `/api/v1/workshift` | qualquer | Listar turnos |
-
-#### Escala
-
-| Método | Rota | Papel | Descrição |
-|--------|------|-------|-----------|
-| POST | `/api/v1/schedule` | rh, admin | Escalar funcionário em um dia |
-| GET | `/api/v1/schedule/employee/{id}` | qualquer | Escala de um funcionário |
-| GET | `/api/v1/schedule/date/{date}` | qualquer | Quem trabalha em determinada data |
-
-#### Ponto
-
-| Método | Rota | Papel | Descrição |
-|--------|------|-------|-----------|
-| POST | `/api/v1/timerecord/employee/{id}/clockin` | qualquer | Bater entrada |
-| POST | `/api/v1/timerecord/employee/{id}/breakstart` | qualquer | Saída para almoço |
-| POST | `/api/v1/timerecord/employee/{id}/breakend` | qualquer | Retorno do almoço |
-| POST | `/api/v1/timerecord/employee/{id}/clockout` | qualquer | Bater saída (calcula horas) |
-| GET | `/api/v1/timerecord/employee/{id}/today` | qualquer | Ponto de hoje |
-| GET | `/api/v1/timerecord/employee/{id}/month?year=2025&month=3` | qualquer | Espelho do mês |
-
----
-
-## Arquitetura
-
-```
-Controllers/      ← recebem requisições HTTP, delegam para repositories
-Model/            ← entidades do banco + interfaces dos repositories
-infra/            ← implementações dos repositories (falam com o banco)
-ViewModel/        ← dados que chegam nas requisições (formulários)
-Services/         ← serviços auxiliares (geração de token JWT)
-Storage/          ← arquivos de foto dos usuários
-```
-
-### Fluxo de uma requisição
-
-```
-HTTP Request
-    │
-    ▼
-Controller         ← valida permissão (JWT role), chama repository
-    │
-    ▼
-IRepository        ← interface (contrato)
-    │
-    ▼
-Repository         ← acessa o banco via ConnectionContext (EF Core)
-    │
-    ▼
-PostgreSQL
-```
-
-### Injeção de Dependência
-
-O `Program.cs` registra todos os repositórios. O ASP.NET injeta automaticamente nos controllers:
-
-```csharp
-// Program.cs
-builder.Services.AddDbContext<ConnectionContext>(...);
-builder.Services.AddScoped<IStudentRepository, StudentRepository>();
-// etc.
-```
-
----
-
-## Testes
-
-O projeto `WebApplication1.Tests` contém 28 testes divididos em:
-
-| Categoria | O que testa |
-|-----------|-------------|
-| **Models** | Lógica de cálculo de horas trabalhadas (`TimeRecord`) |
-| **Repositories** | Média de notas, percentual de presença, ordenação (banco InMemory) |
-| **Controllers** | Respostas HTTP: 200, 404, 400, 409 (com repositórios mockados via Moq) |
-
-```bash
-dotnet test
-# Aprovado! – Com falha: 0, Aprovado: 28, Total: 28
-```
+Coverage includes:
+- `TimeRecord` worked hours calculation (with/without break, overtime)
+- Grade and Attendance repository operations against in-memory DB
+- Controller responses via Moq-injected repositories

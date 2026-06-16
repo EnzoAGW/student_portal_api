@@ -5,7 +5,9 @@
       "Read(//c/Users/Asus/Documents/**)",
       "Bash(dotnet new:*)",
       "Bash(dotnet add:*)",
-      "Bash(dotnet test:*)"
+      "Bash(dotnet test:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)"
     ]
   }
 }
