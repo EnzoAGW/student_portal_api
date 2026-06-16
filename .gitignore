@@ -1,0 +1,59 @@
+# ── .NET / ASP.NET Core ──────────────────────────────────────────────────────
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.log
+*.dbmdl
+*.jfm
+TestResults/
+
+# Publish output
+publish/
+out/
+
+# Secrets & config with sensitive data
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+*.pfx
+*.p12
+secrets.json
+
+# EF Core migrations snapshot (optional — remove if you want to track)
+# **/Migrations/
+
+# ── Node / React (Vite) ──────────────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+
+# Vite cache
+.vite/
+
+# Coverage
+coverage/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# ── Environment & Secrets ────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.production
+
+# ── Storage / Uploads ────────────────────────────────────────────────────────
+back/Storage/*
+!back/Storage/.gitkeep
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ──────────────────────────────────────────────────────────────────────
+.idea/
+*.swp
+*.swo

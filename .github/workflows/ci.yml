@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend — build & test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+
+      - name: Restore dependencies
+        run: dotnet restore WebApplication1.Tests/WebApplication1.Tests.csproj
+
+      - name: Build
+        run: dotnet build WebApplication1.Tests/WebApplication1.Tests.csproj --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test WebApplication1.Tests/WebApplication1.Tests.csproj --no-build --configuration Release --verbosity normal
+
+  frontend:
+    name: Frontend — type-check & build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: front/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: front
+
+      - name: Build (type-check + bundle)
+        run: npm run build
+        working-directory: front
